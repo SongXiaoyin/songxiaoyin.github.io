@@ -1,128 +1,481 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>宋宵因的小栈</title>
-    <!-- 引入 Markdown 解析库 -->
+    <title>宋宵因的小栈 · 二级菜单博客</title>
+    <!-- 使用 marked 解析 Markdown (CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; display: flex; height: 100vh; background-color: #f9f9f9; }
-        
-        /* 左侧侧边栏样式 */
-        #sidebar {
-            width: 260px;
-            background-color: #fff;
-            border-right: 1px solid #e1e4e8;
-            padding: 20px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: #f5f7fa;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
-            flex-shrink: 0;
         }
+
+        /* 整体布局：侧边栏 + 主内容 */
+        .app {
+            display: flex;
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.03);
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* 左侧二级菜单区 */
+        .sidebar {
+            width: 280px;
+            background: #fafbfc;
+            border-right: 1px solid #e6ecf0;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 0 20px 0;
+        }
+
         .site-title {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 30px;
-            color: #24292e;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #e1e4e8;
+            font-size: 1.8rem;
+            font-weight: 600;
+            padding: 0 20px 20px 20px;
+            margin-bottom: 8px;
+            border-bottom: 2px solid #e1e8ed;
+            color: #1a2b3c;
+            letter-spacing: -0.3px;
         }
-        .menu-item {
-            padding: 10px 15px;
-            margin-bottom: 5px;
-            cursor: pointer;
-            border-radius: 6px;
-            color: #586069;
-            transition: all 0.2s;
-            font-size: 15px;
-        }
-        .menu-item:hover { background-color: #f1f8ff; color: #0366d6; }
-        .menu-item.active { background-color: #0366d6; color: white; }
 
-        /* 右侧内容区域样式 */
-        #main-content {
-            flex-grow: 1;
-            padding: 40px 60px;
+        .site-title a {
+            text-decoration: none;
+            color: #1a2b3c;
+        }
+
+        .menu-container {
+            flex: 1;
             overflow-y: auto;
-            background-color: #fff;
+            padding: 12px 12px 12px 16px;
         }
-        #article-title { margin-top: 0; border-bottom: 1px solid #e1e4e8; padding-bottom: 10px; }
-        #article-body { line-height: 1.6; color: #24292e; font-size: 16px; }
-        
-        /* 简单的 Markdown 样式 */
-        #article-body img { max-width: 100%; }
-        #article-body pre { background: #f6f8fa; padding: 16px; border-radius: 6px; overflow: auto; }
-        #article-body code { background: #f6f8fa; padding: 2px 6px; border-radius: 3px; }
 
-        /* 移动端适配 */
-        @media (max-width: 768px) {
-            body { flex-direction: column; }
-            #sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid #e1e4e8; padding: 10px; box-sizing: border-box; }
-            #main-content { padding: 20px; }
+        /* 一级菜单：分类 */
+        .category-item {
+            margin-bottom: 12px;
+            border-radius: 14px;
+            background: white;
+            border: 1px solid #eef2f6;
+            transition: all 0.15s;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px 10px 16px;
+            cursor: pointer;
+            border-radius: 14px;
+            user-select: none;
+            background: white;
+        }
+
+        .category-header:hover {
+            background-color: #f0f4f9;
+        }
+
+        .cat-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #0a1c2f;
+            flex: 1;
+            margin-right: 8px;
+            word-break: break-word;
+        }
+
+        /* 点击分类名就是打开文章（一级菜单点击效果） */
+        .cat-name:hover {
+            color: #0066cc;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .cat-toggle {
+            font-size: 1.2rem;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4a6572;
+            background: #edf2f7;
+            border-radius: 30px;
+            transition: background 0.1s;
+        }
+
+        .cat-toggle:hover {
+            background: #d0ddeb;
+        }
+
+        /* 二级菜单：文章列表 */
+        .article-list {
+            list-style: none;
+            padding: 6px 0 8px 0;
+            margin: 0 12px 0 28px;
+            border-top: 1px dashed #d9e2e9;
+            display: none; /* 默认折叠，通过JS展开 */
+        }
+
+        .article-list li {
+            margin: 6px 0;
+            padding: 8px 12px 8px 20px;
+            border-radius: 30px;
+            font-size: 1rem;
+            color: #2c3e50;
+            cursor: pointer;
+            transition: background 0.1s, color 0.1s;
+            word-break: break-word;
+            border-left: 3px solid transparent;
+        }
+
+        .article-list li:hover {
+            background: #e2eaf2;
+            color: #0055aa;
+            border-left-color: #0077cc;
+        }
+
+        .article-list li.active-article {
+            background: #e0f0fe;
+            color: #004c99;
+            font-weight: 500;
+            border-left-color: #0066cc;
+        }
+
+        /* 右侧内容区 */
+        .main-content {
+            flex: 1;
+            background: #ffffff;
+            padding: 40px 48px;
+            overflow-y: auto;
+            min-width: 0; /* 防止flex溢出 */
+        }
+
+        .article-box {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .article-box h1, .article-box h2, .article-box h3 {
+            color: #1a2b3c;
+            margin-top: 1.2em;
+            margin-bottom: 0.6em;
+        }
+
+        .article-box h1:first-child, .article-box h2:first-child {
+            margin-top: 0;
+        }
+
+        .article-box p {
+            line-height: 1.7;
+            color: #2c3e50;
+            margin-bottom: 1.2em;
+        }
+
+        .article-box code {
+            background: #f0f4f9;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.9em;
+        }
+
+        .article-box pre {
+            background: #1e2b39;
+            color: #e4f0fb;
+            padding: 16px;
+            border-radius: 16px;
+            overflow-x: auto;
+        }
+
+        .empty-placeholder {
+            color: #8a9aa8;
+            font-style: italic;
+            text-align: center;
+            margin-top: 100px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 720px) {
+            .app {
+                flex-direction: column;
+                margin: 10px;
+                border-radius: 16px;
+            }
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e6ecf0;
+                padding: 16px 0;
+            }
+            .main-content {
+                padding: 24px;
+            }
+        }
+
+        /* 脚注点缀 */
+        .footer-note {
+            margin-top: 40px;
+            font-size: 0.8rem;
+            color: #acb8c5;
+            text-align: right;
+            border-top: 1px solid #edf2f7;
+            padding-top: 20px;
         }
     </style>
 </head>
 <body>
-
-    <!-- 左侧菜单 -->
-    <div id="sidebar">
-        <div class="site-title">宋宵因的小栈</div>
-        <div id="menu-list">
-            <!-- 菜单项会通过 JS 自动生成 -->
+<div class="app">
+    <!-- 左侧二级菜单区域 -->
+    <aside class="sidebar">
+        <div class="site-title">
+            <a href="#">宋宵因的小栈</a>
         </div>
-    </div>
-
-    <!-- 右侧文章 -->
-    <div id="main-content">
-        <h1 id="article-title">欢迎来到我的小栈</h1>
-        <div id="article-body">
-            <p>请点击左侧菜单查看文章。</p>
+        <div class="menu-container" id="menuContainer">
+            <!-- 动态由JavaScript生成二级菜单 -->
         </div>
-    </div>
+        <!-- 简单装饰线 -->
+        <div style="padding: 16px 20px 8px; font-size:0.8rem; color:#9aabb8; border-top:1px solid #e6ecf0; margin-top:8px;">
+            ⚡ 二级菜单 · 点击分类名打开文章
+        </div>
+    </aside>
 
-    <script>
-        // ================= 配置区域 (在这里编辑你的文章列表) =================
-        const articles = [
-            { title: "万字深挖：2026年中国酶制剂产业链全景图，国产替代走到哪一步了？", file: "post1.md" },
-            { title: "中国啤酒酶行业深度研究报告：从“液体黄金”背后的推手看产业兴衰", file: "post2.md" },
-            // 想加新文章？复制上面一行，修改 title 和 file 即可
-        ];
-        // ===================================================================
+    <!-- 右侧主内容：文章展示区 -->
+    <main class="main-content" id="mainContent">
+        <div class="article-box" id="articleBox">
+            <!-- 文章将通过marked渲染后放入这里 -->
+            <div class="empty-placeholder">✨ 从左侧选择一篇文章</div>
+        </div>
+        <div class="footer-note">
+           托管于 GitHub Pages · 自由编辑
+        </div>
+    </main>
+</div>
 
-        const menuList = document.getElementById('menu-list');
-        const titleEl = document.getElementById('article-title');
-        const bodyEl = document.getElementById('article-body');
+<script>
+    (function() {
+        // ---------- 这里就是您可以自由编辑的博客数据 ----------
+        // 一级菜单 = 分类 (category.name)
+        // 点击一级菜单(分类名) 将打开该分类下的第一篇文章
+        // 二级菜单 = 文章标题列表，点击打开对应文章
+        const menuData = {
+            siteTitle: "宋宵因的小栈",   // 与图片保持一致
+            categories: [
+                {
+                    name: "📁 随笔杂谈",    // 一级菜单标题
+                    articles: [
+                        { 
+                            title: "文章标题1",   // 二级菜单标题（图片中的标题1）
+                            content: `# 文章标题1\n\n这是**文章标题1**的内容。您可以把这里当作第一篇示例文章。  \n- 自由编辑左侧 menuData 里的文字\n- 支持 **Markdown** 语法\n- 点击一级菜单（分类名）会打开本分类第一篇文章`
+                        },
+                        { 
+                            title: "文章标题2",   // 图片中的标题2
+                            content: `# 文章标题2\n\n这里是第二篇文章。  \n> 小栈的日常记录。  \n\n您完全可以修改或增加文章，甚至添加更多分类。`
+                        }
+                    ]
+                },
+                {
+                    name: "📚 技术笔记",
+                    articles: [
+                        {
+                            title: "GitHub Pages 托管",
+                            content: `## 如何托管\n\n将本文件保存为 index.html，推送到仓库，开启 GitHub Pages 即可。  \n\`\`\`bash\ngit add index.html\ngit commit -m \"add blog\"\ngit push\n\`\`\``
+                        },
+                        {
+                            title: "自定义菜单",
+                            content: `### 编辑二级菜单\n\n直接修改 \`menuData\` 对象里的 \`categories\` 数组：\n- 分类（一级菜单）\n- 文章标题+内容（二级菜单）\n\n点击分类名会加载该分类第一篇。`
+                        }
+                    ]
+                },
+                {
+                    name: "🏷️ 生活碎片",
+                    articles: [
+                        {
+                            title: "一杯咖啡的时间",
+                            content: `## 街角咖啡馆\n\n今天阳光很好，坐在窗边写代码。  \nMarkdown 支持 **加粗**、*斜体*、[链接](https://github.com)。`
+                        }
+                    ]
+                }
+            ]
+        };
 
-        // 初始化菜单
-        articles.forEach((article, index) => {
-            const div = document.createElement('div');
-            div.className = 'menu-item';
-            div.innerText = article.title;
-            div.onclick = () => loadArticle(index, div);
-            menuList.appendChild(div);
-        });
+        // ----- 全局变量 -----
+        const menuContainer = document.getElementById('menuContainer');
+        const articleBox = document.getElementById('articleBox');
+        let currentActiveLi = null;          // 当前高亮的文章li
+        let currentCatIndex = -1;             // 当前打开的文章所属分类
+        let currentArtIndex = -1;              // 当前打开的文章索引
 
-        // 加载文章函数
-        async function loadArticle(index, element) {
-            // 更新菜单高亮
-            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-            if(element) element.classList.add('active');
+        // ----- 初始化渲染左侧二级菜单 -----
+        function renderSidebar() {
+            let html = '';
+            menuData.categories.forEach((cat, catIdx) => {
+                // 一级菜单：分类头部（包含分类名和折叠按钮）
+                html += `<div class="category-item" data-cat-idx="${catIdx}">`;
+                html += `<div class="category-header">`;
+                html += `<span class="cat-name" data-cat-idx="${catIdx}">${cat.name}</span>`;
+                html += `<span class="cat-toggle" data-cat-idx="${catIdx}">▶</span>`;
+                html += `</div>`;
 
-            const article = articles[index];
-            titleEl.innerText = article.title;
-            bodyEl.innerHTML = '<p>加载中...</p>';
+                // 二级菜单：文章列表（初始隐藏，由JS控制展开折叠）
+                html += `<ul class="article-list" data-cat-idx="${catIdx}" id="catList-${catIdx}">`;
+                cat.articles.forEach((article, artIdx) => {
+                    html += `<li data-cat-idx="${catIdx}" data-art-idx="${artIdx}" class="article-item">${article.title}</li>`;
+                });
+                html += `</ul>`;
+                html += `</div>`;
+            });
+            menuContainer.innerHTML = html;
 
-            try {
-                const response = await fetch(article.file);
-                if (!response.ok) throw new Error('文件未找到');
-                const text = await response.text();
-                // 使用 marked 库将 markdown 转换为 html
-                bodyEl.innerHTML = marked.parse(text);
-            } catch (error) {
-                bodyEl.innerHTML = `<p style="color:red">无法加载文章：${article.file}<br>请确保该文件存在于同一目录下。</p>`;
+            // 绑定所有点击事件
+            // 1. 分类名点击（一级菜单点击）—— 打开该分类第一篇文章，并展开分类
+            document.querySelectorAll('.cat-name').forEach(elem => {
+                elem.addEventListener('click', function(e) {
+                    e.stopPropagation();  // 防止触发父级其他事件
+                    const catIdx = parseInt(this.dataset.catIdx);
+                    if (isNaN(catIdx)) return;
+                    const category = menuData.categories[catIdx];
+                    if (category.articles && category.articles.length > 0) {
+                        // 加载本分类第一篇 (artIdx = 0)
+                        loadArticle(catIdx, 0);
+                        // 同时确保该分类展开（方便看到文章列表）
+                        expandCategory(catIdx, true);
+                    } else {
+                        // 如果该分类没有文章，显示提示
+                        articleBox.innerHTML = `<div class="empty-placeholder">📭 分类「${category.name}」下还没有文章</div>`;
+                    }
+                });
+            });
+
+            // 2. 折叠/展开按钮 (▶/▼)
+            document.querySelectorAll('.cat-toggle').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const catIdx = parseInt(this.dataset.catIdx);
+                    toggleCategory(catIdx);
+                });
+            });
+
+            // 3. 文章标题点击（二级菜单点击）—— 打开对应文章
+            document.querySelectorAll('.article-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const catIdx = parseInt(this.dataset.catIdx);
+                    const artIdx = parseInt(this.dataset.artIdx);
+                    if (!isNaN(catIdx) && !isNaN(artIdx)) {
+                        loadArticle(catIdx, artIdx);
+                        // 同时确保所属分类展开（以防折叠状态）
+                        expandCategory(catIdx, true);
+                    }
+                });
+            });
+
+            // 默认展开第一个分类，并选中其第一篇文章
+            if (menuData.categories.length > 0) {
+                const firstCat = menuData.categories[0];
+                if (firstCat.articles && firstCat.articles.length > 0) {
+                    expandCategory(0, true);        // 展开第一个分类
+                    loadArticle(0, 0);               // 加载第一篇
+                } else {
+                    // 如果第一个分类无文章，只展开但显示占位
+                    expandCategory(0, true);
+                    articleBox.innerHTML = `<div class="empty-placeholder">📭 分类「${firstCat.name}」暂无文章，请编辑数据</div>`;
+                }
             }
         }
-    </script>
+
+        // ----- 展开/折叠切换一个分类 -----
+        function toggleCategory(catIdx) {
+            const list = document.getElementById(`catList-${catIdx}`);
+            if (!list) return;
+            const toggleBtn = document.querySelector(`.cat-toggle[data-cat-idx="${catIdx}"]`);
+            if (!toggleBtn) return;
+
+            if (list.style.display === 'block') {
+                list.style.display = 'none';
+                toggleBtn.innerHTML = '▶';
+            } else {
+                list.style.display = 'block';
+                toggleBtn.innerHTML = '▼';
+            }
+        }
+
+        // ----- 强制展开某个分类（不改变其他分类）-----
+        function expandCategory(catIdx, expand = true) {
+            const list = document.getElementById(`catList-${catIdx}`);
+            const toggleBtn = document.querySelector(`.cat-toggle[data-cat-idx="${catIdx}"]`);
+            if (!list || !toggleBtn) return;
+            if (expand) {
+                list.style.display = 'block';
+                toggleBtn.innerHTML = '▼';
+            } else {
+                list.style.display = 'none';
+                toggleBtn.innerHTML = '▶';
+            }
+        }
+
+        // ----- 加载文章: 根据分类索引和文章索引 -----
+        function loadArticle(catIdx, artIdx) {
+            const category = menuData.categories[catIdx];
+            if (!category || !category.articles || category.articles.length <= artIdx) {
+                console.warn('文章索引无效');
+                return;
+            }
+            const article = category.articles[artIdx];
+
+            // 更新右侧内容
+            if (article.content) {
+                // 使用 marked 解析 Markdown
+                const htmlContent = marked.parse(article.content);
+                articleBox.innerHTML = htmlContent;
+            } else {
+                articleBox.innerHTML = `<div class="empty-placeholder">⚠️ 文章内容为空</div>`;
+            }
+
+            // 更新高亮：移除之前的active类
+            if (currentActiveLi) {
+                currentActiveLi.classList.remove('active-article');
+            }
+
+            // 找到当前选中的li并添加高亮
+            const targetLi = document.querySelector(`.article-item[data-cat-idx="${catIdx}"][data-art-idx="${artIdx}"]`);
+            if (targetLi) {
+                targetLi.classList.add('active-article');
+                currentActiveLi = targetLi;
+            }
+
+            // 记录当前文章索引 (可用于其他扩展)
+            currentCatIndex = catIdx;
+            currentArtIndex = artIdx;
+
+            // 可选：更新页面标题
+            document.title = `${article.title} · ${menuData.siteTitle}`;
+        }
+
+        // ----- 启动一切 -----
+        renderSidebar();
+
+        // 可选：如果用户想手动修改数据后重新渲染，可以 expose 一个函数，但这里不需要。
+        // 所有数据都在上面 menuData 里，用户直接修改即可（刷新页面生效）。
+    })();
+</script>
+
+<!-- 附加说明：您只需要修改上方 menuData 里的内容，即可自由更新博客和菜单。 -->
+<!-- 点击一级菜单(分类名)会打开该分类下第一篇文章；二级菜单(具体标题)点击打开对应文章。 -->
 </body>
 </html>
