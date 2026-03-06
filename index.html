@@ -4,124 +4,857 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>宋宵因的小栈</title>
-    <!-- 引入 Markdown 解析库 -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; display: flex; height: 100vh; background-color: #f9f9f9; }
-        
-        /* 左侧侧边栏样式 */
-        #sidebar {
-            width: 260px;
-            background-color: #fff;
-            border-right: 1px solid #e1e4e8;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            flex-shrink: 0;
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #fafaf9;
         }
-        .site-title {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 30px;
-            color: #24292e;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #e1e4e8;
+        .serif {
+            font-family: 'Noto Serif SC', serif;
         }
         .menu-item {
-            padding: 10px 15px;
-            margin-bottom: 5px;
-            cursor: pointer;
-            border-radius: 6px;
-            color: #586069;
-            transition: all 0.2s;
-            font-size: 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .menu-item:hover { background-color: #f1f8ff; color: #0366d6; }
-        .menu-item.active { background-color: #0366d6; color: white; }
-
-        /* 右侧内容区域样式 */
-        #main-content {
-            flex-grow: 1;
-            padding: 40px 60px;
-            overflow-y: auto;
-            background-color: #fff;
+        .menu-item:hover {
+            transform: translateX(8px);
         }
-        #article-title { margin-top: 0; border-bottom: 1px solid #e1e4e8; padding-bottom: 10px; }
-        #article-body { line-height: 1.6; color: #24292e; font-size: 16px; }
-        
-        /* 简单的 Markdown 样式 */
-        #article-body img { max-width: 100%; }
-        #article-body pre { background: #f6f8fa; padding: 16px; border-radius: 6px; overflow: auto; }
-        #article-body code { background: #f6f8fa; padding: 2px 6px; border-radius: 3px; }
-
-        /* 移动端适配 */
-        @media (max-width: 768px) {
-            body { flex-direction: column; }
-            #sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid #e1e4e8; padding: 10px; box-sizing: border-box; }
-            #main-content { padding: 20px; }
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out, opacity 0.3s ease-out;
+            opacity: 0;
+        }
+        .submenu.active {
+            max-height: 500px;
+            opacity: 1;
+        }
+        .article-card {
+            transition: all 0.3s ease;
+        }
+        .article-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
         }
     </style>
+<base target="_blank">
 </head>
-<body>
+<body class="text-stone-800 min-h-screen flex flex-col">
 
-    <!-- 左侧菜单 -->
-    <div id="sidebar">
-        <div class="site-title">宋宵因的小栈</div>
-        <div id="menu-list">
-            <!-- 菜单项会通过 JS 自动生成 -->
+    <!-- Header -->
+    <header class="bg-white border-b border-stone-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="serif text-2xl font-bold text-stone-900 tracking-wide cursor-pointer" onclick="showHome()">
+                宋宵因的小栈
+            </h1>
+            <button onclick="toggleEditMode()" id="editBtn" class="text-sm px-4 py-2 rounded-full border border-stone-300 hover:bg-stone-100 transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                <span>编辑模式</span>
+            </button>
         </div>
+    </header>
+
+    <div class="flex-1 max-w-6xl mx-auto w-full px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Sidebar Menu -->
+        <aside class="lg:col-span-3 space-y-2">
+            <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6 sticky top-24">
+                <h2 class="text-xs font-bold text-stone-400 uppercase tracking-wider mb-4">目录导航</h2>
+                <nav id="menuContainer" class="space-y-1">
+                    <!-- Menu items will be generated here -->
+                </nav>
+                
+                <!-- Edit Controls (hidden by default) -->
+                <div id="editControls" class="hidden mt-6 pt-6 border-t border-stone-200 space-y-3">
+                    <button onclick="addCategory()" class="w-full text-left px-3 py-2 text-sm text-stone-600 hover:bg-stone-100 rounded-lg transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        添加分类
+                    </button>
+                    <button onclick="exportData()" class="w-full text-left px-3 py-2 text-sm text-stone-600 hover:bg-stone-100 rounded-lg transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        导出数据
+                    </button>
+                    <div class="text-xs text-stone-400 mt-2">
+                        提示：编辑后请导出数据替换代码中的 blogData 变量
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="lg:col-span-9">
+            <!-- Home View -->
+            <div id="homeView" class="fade-in">
+                <div class="bg-gradient-to-br from-stone-100 to-stone-50 rounded-2xl p-8 mb-8 border border-stone-200">
+                    <h2 class="serif text-3xl font-bold text-stone-800 mb-3">欢迎来到小栈</h2>
+                    <p class="text-stone-600 leading-relaxed max-w-2xl">
+                        这里是一个简洁的静态博客空间。左侧菜单可展开查看文章，点击标题即可阅读。
+                        所有数据存储在页面中，可自由编辑并部署到 GitHub Pages。
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="recentArticles">
+                    <!-- Recent articles preview -->
+                </div>
+            </div>
+
+            <!-- Article View -->
+            <article id="articleView" class="hidden fade-in bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                <div class="p-8 md:p-12">
+                    <div class="flex items-center gap-2 text-sm text-stone-500 mb-4">
+                        <span id="articleCategory" class="px-2 py-1 bg-stone-100 rounded-md text-xs font-medium"></span>
+                        <span>·</span>
+                        <span id="articleDate"></span>
+                    </div>
+                    <h1 id="articleTitle" class="serif text-3xl md:text-4xl font-bold text-stone-900 mb-8 leading-tight"></h1>
+                    <div id="articleContent" class="prose prose-stone max-w-none prose-headings:serif prose-p:leading-relaxed prose-p:text-stone-700 prose-a:text-stone-900 prose-a:underline prose-a:decoration-stone-400 prose-a:underline-offset-4 hover:prose-a:decoration-stone-900"></div>
+                </div>
+                <div class="bg-stone-50 px-8 py-6 border-t border-stone-200 flex justify-between items-center">
+                    <button onclick="showHome()" class="text-stone-600 hover:text-stone-900 flex items-center gap-2 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        返回首页
+                    </button>
+                    <button onclick="editCurrentArticle()" id="editArticleBtn" class="hidden text-stone-400 hover:text-stone-600 text-sm">
+                        编辑文章
+                    </button>
+                </div>
+            </article>
+
+            <!-- Editor View -->
+            <div id="editorView" class="hidden fade-in bg-white rounded-2xl shadow-sm border border-stone-200 p-8">
+                <h2 class="serif text-2xl font-bold mb-6" id="editorTitle">编辑文章</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-stone-700 mb-1">标题</label>
+                        <input type="text" id="editTitle" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-stone-400 focus:border-transparent outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-stone-700 mb-1">分类</label>
+                        <select id="editCategory" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-stone-400 focus:border-transparent outline-none"></select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-stone-700 mb-1">内容 (支持 Markdown)</label>
+                        <textarea id="editContent" rows="12" class="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-stone-400 focus:border-transparent outline-none font-mono text-sm"></textarea>
+                    </div>
+                    <div class="flex gap-3 pt-4">
+                        <button onclick="saveArticle()" class="px-6 py-2 bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors">保存</button>
+                        <button onclick="cancelEdit()" class="px-6 py-2 border border-stone-300 rounded-lg hover:bg-stone-50 transition-colors">取消</button>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <!-- 右侧文章 -->
-    <div id="main-content">
-        <h1 id="article-title">欢迎来到我的小栈</h1>
-        <div id="article-body">
-            <p>请点击左侧菜单查看文章。</p>
+    <footer class="bg-white border-t border-stone-200 mt-12 py-8">
+        <div class="max-w-6xl mx-auto px-6 text-center text-stone-500 text-sm">
+            <p>&copy; 2024 宋宵因的小栈 · 使用 GitHub Pages 托管</p>
         </div>
-    </div>
+    </footer>
 
     <script>
-        // ================= 配置区域 (在这里编辑你的文章列表) =================
-        const articles = [
-            { title: "文章标题1", file: "post1.md" },
-            { title: "文章标题2", file: "post2.md" },
-            // 想加新文章？复制上面一行，修改 title 和 file 即可
-        ];
-        // ===================================================================
+        // 博客数据 - 可自由编辑此部分
+        let blogData = {
+            categories: [
+                {
+                    id: "tech",
+                    title: "技术随笔",
+                    articles: [
+                        {
+                            id: "article1",
+                            title: "市场上有多少商用酶制剂在售？",
+                            date: "2024-01-15",
+                            content: `<p>引言：看不见的“蛋白质工人”，酶制剂行业真相
 
-        const menuList = document.getElementById('menu-list');
-        const titleEl = document.getElementById('article-title');
-        const bodyEl = document.getElementById('article-body');
+在人类工业文明的宏大叙事中，有这样一群看不见的“工人”。它们既非钢铁铸造的机械，也非代码驱动的算法，而是源于大自然的生物催化剂——酶。如果你曾享用过清澈的果汁、松软的面包、去污力强的洗衣粉，或是穿过柔软的牛仔布衣物，那么你已经与这场由酶主导的工业革命不期而遇。
 
-        // 初始化菜单
-        articles.forEach((article, index) => {
-            const div = document.createElement('div');
-            div.className = 'menu-item';
-            div.innerText = article.title;
-            div.onclick = () => loadArticle(index, div);
-            menuList.appendChild(div);
+酶，这些由活细胞产生的具有催化功能的蛋白质（少数为RNA），以其惊人的高效性和专一性，正在悄然重塑现代工业的面貌。与传统化学催化剂需要高温高压的苛刻条件不同，酶在温和的温度、压力和pH值环境下就能完成复杂的化学反应，且本身无毒、可生物降解。正因如此，酶制剂工业被视为21世纪绿色制造和生物经济的核心支柱之一。
+
+根据市场研究数据，2025年全球工业酶市场规模已达85.6亿美元，预计到2034年将增长至163.3亿美元。这场静默的革命已深入食品、饲料、洗涤、纺织、能源、医药等国民经济的各个角落。那么，究竟有哪些酶已经走出实验室，成为工业生产线上不可或缺的“多面手”？它们各自又身怀怎样的绝技？
+
+本文将基于国内外最新的产业资料与科研文献，为您全面梳理已实现规模化生产并商业化的酶制剂，深入解读它们的特性与用途，带您走进这个微观世界的工业先锋。
+
+第一章：碳水化合物的水解大师——糖酶家族
+
+在商用酶制剂的版图中，糖酶（Carbohydrases）是当之无愧的“头号家族”，占据了最大的市场份额。它们的核心使命是催化碳水化合物（主要是多糖）的水解，将大分子糖类拆解为小分子。
+
+1. 淀粉酶——工业酶的“元老”
+
+淀粉酶是历史上最早实现规模化生产的酶制剂之一，也是目前消费量最大的酶种，约占酶制剂消费总量的40%左右。它的作用是催化淀粉水解，生成糊精、低聚糖或单糖。
+
+α-淀粉酶是一种内切酶，它能随机切割淀粉分子内部的α-1,4糖苷键，将长链淀粉迅速切断成短链的糊精，使淀粉溶液的粘度急剧下降，这一过程被称为“液化”。工业上应用的耐高温α-淀粉酶，能在90℃甚至更高的温度下保持活性，完美适配淀粉液化的高温工艺。
+
+糖化酶则是一种外切酶，它从淀粉或糊精的非还原端开始，逐个水解α-1,4糖苷键（部分品种也能水解α-1,6键），生成葡萄糖。它是将液化后的淀粉彻底转化为葡萄糖的关键酶。
+
+用途一览：淀粉酶的应用无处不在。在食品工业中，它们是生产葡萄糖浆、果葡糖浆、麦芽糊精的基础；在酿造领域，它们将原料中的淀粉转化为可发酵的糖，用于生产啤酒、白酒和酒精；在纺织行业，它们用于退浆，去除织物上的淀粉浆料；在洗涤剂中，它们能帮助去除含有淀粉的食物污渍。
+
+2. 葡糖异构酶——甜味剂革命的推手
+
+葡糖异构酶（又称木糖异构酶）是一种具有传奇色彩的酶。它能将D-葡萄糖转化为D-果糖，是工业上生产果葡糖浆的核心酶制剂。
+
+果葡糖浆的诞生彻底改变了食品饮料行业。由于果糖的甜度远高于蔗糖和葡萄糖，利用葡糖异构酶将葡萄糖异构化为果糖，可以获得甜度高、口感好、渗透压适宜的果葡糖浆，大量替代蔗糖应用于碳酸饮料、果汁、烘焙食品中。
+
+长期以来，固定化葡糖异构酶的生产技术被国外企业垄断。直到2026年初，中粮集团宣布其自主研发的葡糖异构酶正式获批为新食品添加剂，实现了这一核心酶制剂的国产化突破。
+
+用途一览：主要用于高果糖浆（HFCS）的工业生产，是现代甜味剂供应链的关键一环。
+
+3. 纤维素酶——植物生物质的钥匙
+
+纤维素酶是一个复杂的多酶体系，通常包括内切葡聚糖酶、外切葡聚糖酶（纤维二糖水解酶）和β-葡萄糖苷酶。三者协同作用，将纤维素这种地球上最丰富的有机碳源水解为葡萄糖。
+
+特性亮点：纤维素酶的生产难度较大，成本也相对较高。但因其能够分解难以处理的纤维素，应用前景广阔。印度CSIR研究所已成功开发出用于生物质转化及造纸工业的纤维素酶生产技术，并实现了技术转让。
+
+用途一览：在生物能源领域，纤维素酶是推动纤维素乙醇产业化的核心；在纺织行业，它被用于牛仔布的“生物抛光”和“石洗”处理，能赋予织物柔软的手感和独特的外观；在饲料工业，它能分解植物饲料中的纤维素，提高饲料利用率；在食品加工中，它帮助提取植物中的有效成分，如果蔬汁的澄清。
+
+4. 半纤维素酶——辅助但不可或缺
+
+半纤维素酶家族包括木聚糖酶、甘露聚糖酶等，作用于半纤维素（植物细胞壁中除纤维素和果胶外的另一类多糖）。
+
+用途一览：在饲料工业中，木聚糖酶被广泛添加于以小麦、大麦为基础的饲料中，以降低非淀粉多糖导致的肠道粘度，促进营养吸收。在烘焙中，它们能改善面团的操作性能和面包的体积。
+
+5. 果胶酶——果汁澄清的魔术师
+
+果胶酶并非单一酶种，而是包括果胶酯酶、多聚半乳糖醛酸酶、果胶裂解酶等多种能降解果胶的酶的总称。果胶是一种存在于植物细胞壁中的胶状多糖，会导致果汁浑浊、压榨困难。
+
+用途一览：果胶酶是果汁加工业的必备酶制剂。它被用于苹果汁、葡萄汁的澄清处理，能有效降解果胶，降低果汁粘度，加速过滤，提高出汁率，并使果汁清澈透亮。在酿酒过程中，它也有助于香气物质的释放。
+
+6. 乳糖酶——乳制品的转化者
+
+乳糖酶（β-半乳糖苷酶）能将乳糖水解为半乳糖和葡萄糖。
+
+用途一览：对于乳糖不耐受人群，乳糖酶处理的牛奶可以解决饮用牛奶后腹胀、腹泻的问题。在乳制品工业中，它用于生产低乳糖或零乳糖乳制品，也能提高冰淇淋、炼乳等产品的甜度和溶解度，防止乳糖结晶。
+
+第二章：蛋白质的分解者——蛋白酶家族
+
+蛋白酶（Proteases）是另一类占据市场主导地位的酶制剂，与淀粉酶合计约占消费总量的70%-80%。它们催化蛋白质肽键的水解，将蛋白质分解为胨、肽或氨基酸。
+
+1. 碱性蛋白酶——洗涤剂中的王牌
+
+碱性蛋白酶是工业酶市场中单品销量最高的酶种之一。其最显著的特性是在碱性pH环境下（如pH 9.0-11.0）具有高活性和高稳定性，并且耐热、耐表面活性剂和漂白剂。
+
+用途一览：它是加酶洗衣粉和液体洗涤剂的核心成分，能有效分解汗渍、奶渍、血渍、草渍等蛋白质类污垢。没有碱性蛋白酶，现代高效低温洗涤技术将大打折扣。此外，它也应用于胶片回收（分解明胶）、丝绸脱胶等领域。
+
+2. 中性蛋白酶与酸性蛋白酶
+
+与碱性蛋白酶不同，中性蛋白酶（作用pH中性）和酸性蛋白酶（作用pH酸性）在各自的pH区间内发挥作用。
+
+用途一览：在食品工业中，它们被用于肉类嫩化（分解结缔组织）、水解植物蛋白生产调味液、干酪生产（凝乳酶也是一种特殊的酸性蛋白酶）以及啤酒的抗冷浑浊。在饲料工业中，添加蛋白酶能提高蛋白质原料的消化利用率。在皮革加工中，蛋白酶用于脱毛和软化，显著减少了传统石灰-硫化碱工艺带来的污染。
+
+3. 特色蛋白酶——角蛋白酶
+
+角蛋白酶是一种能降解角蛋白的特殊蛋白酶。角蛋白是构成羽毛、毛发、指甲的坚韧蛋白质，一般蛋白酶难以分解。
+
+用途一览：主要用于家禽羽毛的降解处理，将羽毛废弃物转化为可回收的蛋白质饲料或氨基酸，既解决了环境污染问题，又实现了资源循环利用。
+
+第三章：油脂的水解者——脂肪酶家族
+
+脂肪酶（Lipases）催化甘油三酯水解生成脂肪酸和甘油。在工业酶市场中，虽然其总体规模小于糖酶和蛋白酶，但增长迅速且应用高端。
+
+特性亮点：脂肪酶具有独特的“界面激活”特性，即只有在油水界面才能充分发挥活性。许多脂肪酶还具有高度的立体选择性、区域选择性和脂肪酸链长选择性，这使其在手性合成中极具价值。
+
+用途一览：洗涤剂：脂肪酶是衣物洗涤剂的重要成分，专门用于分解油渍、酱渍等脂类污垢。
+
+食品工业：在乳制品中，脂肪酶被用于干酪的熟化，产生特征性风味物质（如短链脂肪酸），赋予奶酪独特的“辛香”味。它还用于油脂改性，如生产类可可脂、人乳替代脂等。
+
+造纸工业：用于控制“胶粘物”，去除纸浆中的树脂成分。
+
+医药与手性合成：作为生物催化剂，用于合成手性药物中间体。
+
+生物柴油：催化油脂与醇反应生产生物柴油。
+
+第四章：饲料与环保领域的绿色先锋
+
+1. 植酸酶——饲料工业的革命
+
+植酸酶是一种能水解植酸（肌醇六磷酸）的酶。植酸是植物性饲料（如玉米、豆粕）中磷的主要储存形式，但单胃动物（猪、禽、鱼类）缺乏分解植酸的内源酶，导致植酸中的磷无法被利用而随粪便排出，造成磷资源的浪费和环境污染。同时，植酸还会螯合钙、锌、铁等矿物质及蛋白质，降低其生物利用率。
+
+用途一览：在饲料中添加植酸酶，可以释放植酸中的磷，提高饲料中磷的利用率，从而减少饲料中无机磷的添加，降低粪便中的磷排放量高达30%-50%。这是饲料工业近30年来最重要的技术进步之一。目前，植酸酶已成为饲用酶制剂中增长最快、最有潜力的品种之一。印度CSIR研究所已将植酸酶生产技术转让给企业实现商业化。
+
+2. 饲用复合酶——协同作战的力量
+
+实践中，饲料企业很少使用单一酶种，更多是使用饲用复合酶。复合酶通常以植酸酶为核心，搭配木聚糖酶、β-葡聚糖酶、纤维素酶和蛋白酶等，旨在全面破解植物细胞壁的“抗营养因子”笼子效应，释放淀粉、蛋白质和矿物质，并降低肠道食糜粘度，从而全面提升饲料转化效率，改善动物肠道健康。
+
+3. 漆酶与过氧化物酶——环保新星
+
+随着环保要求日益严格，用于环境治理的酶制剂备受关注。漆酶是一种含铜的多酚氧化酶，能以分子氧为电子受体，氧化酚类和芳香胺类化合物。过氧化物酶则需在过氧化氢存在下发挥作用。
+
+用途一览：这两类酶可用于工业废水处理，降解造纸废水、纺织印染废水中的酚类污染物、合成染料等有毒有害物质。在生物修复领域，它们能降解土壤中的多环芳烃等顽固污染物。在食品工业中，漆酶可用于处理葡萄酒和啤酒中的酚类物质，提高稳定性。
+
+第五章：分子生物学时代的精兵——诊断与科研用酶
+
+除大规模的工业应用外，有一类酶在“高纯度、高特异性”的赛道上发挥着关键作用。它们主要用于科学研究、体外诊断和分子检测。
+
+1. DNA聚合酶——PCR的核心
+
+DNA聚合酶是聚合酶链式反应（PCR）的核心试剂。其中，从嗜热水生菌中分离的Taq DNA聚合酶的发现，彻底变革了分子生物学。它耐高温，能在PCR循环的热变性过程中保持活性。随后发展出的高保真DNA聚合酶（如Pfu酶）具有校对功能，大大提高了扩增的准确性。链置换DNA聚合酶则用于等温扩增技术。
+
+用途一览：广泛用于病原体检测（如新冠病毒核酸检测）、基因克隆、法医鉴定、遗传病诊断等。
+
+2. 逆转录酶——连接RNA和DNA的桥梁
+
+逆转录酶能将RNA模板逆转录生成互补DNA（cDNA）。这一酶活性对于研究RNA病毒（如HIV、流感病毒）和真核生物基因表达至关重要。
+
+用途一览：在逆转录PCR（RT-PCR）中，它被用于从mRNA合成cDNA，进而检测RNA病毒的感染或分析基因的表达水平。随着mRNA疫苗的兴起，逆转录酶在质量控制检测中也扮演着重要角色。
+
+3. 限制性内切酶与连接酶——基因工程的工具
+
+限制性内切酶能识别并切割DNA上特定的短序列（识别位点），被誉为“分子剪刀”。DNA连接酶则能将两段DNA分子连接起来，被誉为“分子胶水”。
+
+用途一览：两者是基因工程和分子克隆最基本、最常用的工具酶。科学家利用它们对DNA分子进行“剪切”和“粘贴”，构建重组DNA分子，用于基因功能研究、转基因生物开发、基因治疗载体构建等。
+
+4. 诊断用特色酶——生化检测的传感器
+
+在医院的生化检测中，酶法测定因其高特异性而成为金标准。这些酶对纯度、稳定性和批次一致性要求极高。
+
+葡萄糖氧化酶：与过氧化物酶联用，是血糖测定的基础。它能特异性地氧化葡萄糖，产生过氧化氢，后者通过显色反应进行定量。
+
+尿酸酶：专一性地氧化尿酸生成尿囊素和过氧化氢，用于测定血清或尿液中的尿酸浓度，辅助诊断痛风等疾病。
+
+肌酸激酶同工酶（CK-MB）、乳酸脱氢酶（LDH）：用于心肌损伤（如心肌梗死）的诊断。
+
+胆固醇氧化酶、甘油激酶：分别用于测定总胆固醇和甘油三酯，是血脂分析的核心试剂。
+
+第六章：特殊领域的特种兵——其他工业酶
+
+除上述几大类外，还有一些在特定领域不可或缺的商用酶制剂。
+
+1. 葡萄糖氧化酶——除氧与保鲜
+
+葡萄糖氧化酶催化葡萄糖与氧气反应，生成葡萄糖酸和过氧化氢。
+
+用途一览：在食品工业中，它被用作除氧剂，用于防止啤酒氧化、保持食品色泽和风味。在烘焙中，它能改善面团的流变特性和面包的体积。由于其消耗氧气，还可用于保护易氧化的营养成分。
+
+2. 溶菌酶——天然的抗菌剂
+
+溶菌酶能水解细菌细胞壁中的肽聚糖，导致细菌裂解。它是一种天然、安全的抗菌蛋白。
+
+用途一览：在食品工业中，广泛用于干酪、乳制品、肉制品和水产品的防腐保鲜，以防止腐败菌（特别是革兰氏阳性菌）的生长。在医药领域，它被用于治疗急慢性咽喉炎、口腔溃疡等，也作为添加剂加入婴儿奶粉，以模拟母乳的抗菌功能。
+
+3. 过氧化氢酶——守护者
+
+过氧化氢酶能将过氧化氢迅速分解为水和氧气。
+
+用途一览：在纺织工业中，织物漂白后残留的过氧化氢需用其去除，以保证后续染色均匀。在食品工业中，它与葡萄糖氧化酶联用，分解后者产生的过氧化氢，避免氧化产物对食品品质的影响。在临床生化检测中，它也是重要的辅助试剂。
+
+4. 青霉素酰化酶——半合成抗生素的基石
+
+青霉素酰化酶能催化水解青霉素G生成6-氨基青霉烷酸（6-APA），也能催化逆反应合成新的半合成青霉素。
+
+用途一览：它是制药工业最重要的酶之一。6-APA是合成氨苄西林、阿莫西林等广谱半合成青霉素的关键中间体。固定化青霉素酰化酶技术的应用，实现了这一过程的连续化、自动化生产。
+
+第七章：商用酶制剂的未来图谱
+
+当我们站在2026年回望，商用酶制剂已经形成了一个覆盖食品、饲料、洗涤、纺织、能源、环保、医药、诊断的庞大产业生态。从用量巨大的淀粉酶、蛋白酶，到高附加值的分子生物学酶，再到解决特定问题的植酸酶、溶菌酶，这些源自微生物、植物或动物的蛋白质催化剂，已经成为现代工业体系不可或缺的基石。
+
+梳理这些酶制剂的特性，我们可以清晰地看到两条并行的发展脉络：
+
+一是工业酶追求极致的“皮实耐用”。通过从极端环境微生物中挖掘基因资源，或借助定向进化、人工智能辅助设计等蛋白质工程手段，科学家们正在不断赋予酶更强的耐热性、耐酸碱性、高比活力和更广的底物谱，以适应严苛的工业条件。
+
+二是检测与药用酶追求极致的“精准纯净”。在高纯度的背景下，是极高的底物特异性、极低的批次间差异以及严格的质量控制体系，以确保诊断结果的准确和临床用药的安全。
+
+值得注意的是，这些不同应用领域的界限正在逐渐模糊。饲料用酶开始关注肠道健康和免疫调节，向着功能性添加剂方向发展；工业级的固定化酶技术，也为医药用酶的高效利用提供了借鉴。合成生物学的崛起，更是将酶制剂推向了一个新的高度——通过构建“细胞工厂”，实现从原料到产品的全生物合成，这背后依然是多种酶在细胞内的精密协同。
+
+在未来，随着全球对绿色制造、碳中和及可持续发展的重视，商用酶制剂的应用边界将被不断打破。或许在不久的将来，我们穿的衣服、住的房子、使用的电子产品，都将有更多来自这些微观“工人”的贡献。它们虽小，却正在催化一个更清洁、更高效、更可持续的世界。</p>`
+                        },
+                        {
+                            id: "article2",
+                            title: "中国啤酒酶兴衰启示录",
+                            date: "2024-02-20",
+                            content: `<p>C宋宵因从吃到用了解酶——中国啤酒酶行业深度研究报告：从“液体黄金”背后的推手看产业兴衰
+
+核心摘要啤酒被誉为“液体黄金”，而啤酒酶就是这黄金里的“炼金术士”。过去三十年，中国啤酒酶行业经历了一场从“仰视外资”到“国产替代”，再到“红海厮杀”的完整大戏。本报告将剥开晦涩的技术外衣，带你读懂这个细分赛道的商业逻辑与未来。
+
+一、啤酒酶的开发背景：为什么啤酒里要加“佐料”？
+
+1. 行业痛点：中国特色的“大米胃口”
+
+做啤酒原本只需要麦芽、啤酒花、水和酵母。但在中国（以及很多亚洲国家），为了降低成本并调整口感，酿酒师大量使用大米、玉米、淀粉来替代部分麦芽。这叫“辅料酿造”。
+
+生活化比喻：这就好比煮粥。纯麦芽就像煮精米，容易烂；加了大量大米和玉米后，就像煮糙米杂粮粥，又粘又硬，锅里的“汤”（麦汁）很难过滤出来。
+
+技术难题：麦芽自带一种“剪刀”（内源酶）能把淀粉剪切成糖，让酵母吃掉变成酒精。但大米没有这种剪刀，而且大米煮出来会产生大量的β-葡聚糖（一种像胶水一样的物质），导致过滤速度极慢，酒液浑浊。
+
+2. 解决方案：请外援（外源酶）
+
+既然麦芽自带的剪刀不够用，那就人工添加“剪刀”。这就是啤酒复合酶诞生的背景。
+
+功能：降低麦汁粘度、加快过滤速度、提高原料利用率（让每一粒大米都被榨干价值）。
+
+二、当时中国酶制剂行业发展状况：大象脚下的蚂蚁
+
+在90年代初期至中期，中国酶制剂行业基本处于“手工作坊”阶段：
+
+外资垄断：市场被诺维信（Novozymes）、杰能科（Genencor）等国际巨头把持。他们的产品质量好、纯度高，但价格贵得离谱，简直是卖“液体黄金”。
+
+国产窘境：国内厂家多为固体曲发酵，生产环境简陋（有的甚至像做酱油一样晾晒），酶活力低、杂菌多、批次不稳定。
+
+技术断层：当时国内缺乏高效的液体深层发酵技术，提炼工艺也落后，做出来的酶制剂不仅活力差，闻起来还有股酱油味或臭味。
+
+三、啤酒酶项目成功的因素：国产突围的“三板斧”
+
+中国啤酒酶项目（以溢多利、蔚蓝生物及各类中小型复配厂为代表）之所以能成功突围，主要靠这三点：
+
+1. 技术适配：专治“中国病”
+
+外资巨头的酶主要是针对欧美全麦芽或低辅料啤酒设计的。而中国啤酒厂的大米/辅料添加量极高（有的高达40%-50%）。
+
+成功点：国产厂家针对这种“高辅料”工艺，开发了耐高温α-淀粉酶、强效β-葡聚糖酶等复合酶系，专门解决大米带来的“粘锅”问题。
+
+2. 服务下沉：蹲在车间搞研发
+
+外资虽然产品好，但反应慢。国产技术员直接住进啤酒厂，盯着糖化锅。
+
+案例：啤酒厂今天麦子受潮了，明天大米换供应商了，国产酶制剂厂能立刻调整配方，哪怕是半夜两点也能送货上门。这种“保姆式服务”打动了当时的国营啤酒厂。
+
+3. 极致性价比：把“奢侈品”卖成“日用品”
+
+国产液体发酵技术突破后，成本大幅下降。国产酶的价格往往只有进口酶的一半甚至更低，对于对成本极其敏感的中国啤酒巨头（如华润、青岛、燕京）来说，这是无法拒绝的诱惑。
+
+四、市场规格与格局：从“单兵作战”到“集团军”
+
+1. 产品规格进化
+
+初期：单一酶制剂（比如只卖淀粉酶）。
+
+中期：复合酶制剂（按比例调配好的鸡尾酒式产品，一包解决所有问题）。
+
+现在：定制化解决方案（针对不同啤酒品牌、不同季节麦芽质量的专属配方）。
+
+2. 市场规模
+
+中国作为全球最大的啤酒生产国（年产量约3500万-3800万千升），虽然啤酒总产量趋于饱和，但酶的使用率是100%。
+
+体量：虽然酶在啤酒成本中占比极低（可能不到1%），但它是刚需。这是一个**“小而美”**的市场，规模在数亿元人民币级别，但通过它可以撬动整个啤酒发酵工业。
+
+五、市场价格变化趋势：过山车式的滑坡
+
+啤酒酶的价格演变史，就是一部典型的中国工业品价格史：
+
+暴利期（90年代-2000年初）：技术壁垒高，外资定价权强，利润丰厚。
+
+混战期（2005-2015）：国产厂家如雨后春笋，技术门槛降低（复配门槛低，买单体酶自己混一下就能卖）。价格战爆发，价格腰斩再腰斩。
+
+微利/稳定期（2016-至今）：行业洗牌，小厂被淘汰或并购。啤酒厂集中度极高（五大巨头垄断），对供应商压价能力极强。
+
+现状：啤酒酶已经从“高科技产品”变成了“大宗工业味精”，价格透明，利润微薄，主要靠走量和资金账期生存。
+
+六、2026年市场展望：从“量”到“质”的突围
+
+预计到2026年，啤酒酶市场将呈现以下特征：
+
+1. 精酿化带来的新需求（高端化）
+
+传统工业水啤（淡爽）市场萎缩，精酿啤酒、原浆啤酒增长。
+
+新机会：精酿不需要解决大米粘度问题，但需要解决澄清、泡沫稳定性、特殊风味问题。比如能产生特定果香的糖苷酶，或者防止冷浑浊的特种蛋白酶，将是高价新品。
+
+2. 低卡/无醇趋势（健康化）
+
+年轻人怕胖，低糖、低卡啤酒流行。
+
+新技术：这就需要普鲁兰酶、葡糖淀粉酶等，把啤酒里残留的糊精彻底切碎变成糖，让酵母完全吃掉，实现“干爽、低卡”。
+
+3. 寡头绑定
+
+随着啤酒下游彻底巨头化，酶制剂供应商也将进一步集中。只有具备强大研发能力、供应链稳定的大型生物科技公司才能成为长期战略伙伴。
+
+七、行业启示录：给酶制剂从业者的经验教训
+
+参考中国啤酒酶项目的兴衰，我们可以总结出以下血泪经验：
+
+1. 警惕“复配陷阱”
+
+教训：早期很多公司只做“搬运工”，买大厂的单体酶，自己在仓库里搅拌一下就卖给啤酒厂。这种模式没有核心技术壁垒，一旦上游断供或下游压价，瞬间死亡。
+
+建议：必须掌握核心菌种和发酵技术，或者在应用技术上有不可替代的独门绝技。
+
+2. 也是死于“内卷”
+
+教训：啤酒酶行业最后变成了纯粹的价格厮杀，甚至出现为了降成本牺牲酶活稳定性的情况，导致口碑崩盘。
+
+建议：不要在红海里通过降价求生存。要寻找新的蓝海（如现在的烘焙酶、饲料酶、生物能源酶）。
+
+3. 客户需求是第一生产力
+
+教训：外资当年输就输在傲慢，不愿为中国的大米辅料工艺改配方。
+
+建议：技术不是越先进越好，是越“合脚”越好。 能够解决客户现场具体痛点（比如过滤堵塞、沉淀多）的产品，比实验室数据完美的产品更有价值。
+
+总结：
+
+中国啤酒酶行业是一面镜子。它告诉我们，利用中国巨大的市场规模和应用场景，确实可以快速实现国产替代；但如果后期缺乏持续的原始创新，很容易陷入低价竞争的泥潭。未来的机会，在于高端化、个性化和绿色化。</p>`
+                        }
+                    ]
+                },
+                {
+                    id: "life",
+                    title: "传说故事",
+                    articles: [
+                        {
+                            id: "article3",
+                            title: "传说中除夕、过年和压岁钱的起源",
+                            date: "2024-03-10",
+                            content: `<p>相传在远古时代，人、神和兽共同存在，纷争不断，人们为了能抵御恶兽的侵扰，组建成一个个的部落，共同生活，当组团也解决不了问题时，就向神明寻求庇护。
+
+相传有个人类部落，曾经遇到过一个破坏力很强的恶兽，叫做夕，夕兽又高又大，爪牙锋利，经常袭击人类部落，吞食人类和牲畜，人们抵扣不了，遭受到了巨大的损失。
+
+于是人们向供奉的神明祈祷，寻求保护。神明派出了一个叫做年的大力神兽来处理夕兽。年是一个高大威猛、身披鳞甲的神兽，见到夕后，二话不说就上前打斗起来。虽然年比夕兽厉害，打得夕兽没有还手之力，但是夕兽好像个打不死的小强，虽然不断被打倒，但就是死不了，也不逃跑，或者说是年打架打上瘾了，根本不放夕离开。
+
+慢慢的，年终于玩累了，看看夕还是能站起来，准备要跑，年想自己出来一趟，让夕跑了等自己回去后夕再回来作恶就不好了，于是从不远处移来一座大山，直接把夕兽给压在山下，再也不能出来了。
+
+人们为了纪念年把夕兽压在山下的事迹，把这一天称做除夕，从夕出来作乱到夕被年镇压的时间，称作一岁。岁就是为此专门创造的文字，意思就是用山把夕兽给镇压了。
+
+人类非常感谢年，大家欢聚一起给年开庆功会，除了大摆宴席，载歌载舞，大家都把自己收集到的宝贝送给年兽，年也比较客气，收到礼物后，就把自己的鳞片揭下一片作为回礼，拿到年的鳞片的人们就放到孩子的枕头下面，这样就能镇压邪祟，也就称做压祟，因为是因为镇压夕兽活动得到的，也称做压岁，这一举动世代流传下来就成了压岁钱。
+
+人类款待年的时候，发现年这神兽是一个大胃王，太能吃了，等到半夜的时候，就把人类的粮食吃掉大半，这样下去，虽然没有了夕兽的侵害，也会被年吃穷啊。于是人们把竹筒放到火上烧，爆炸后发出一阵阵惊天动地的响声，年以为出了什么大事，赶紧告辞离开了。
+
+人们觉得年还是有功于人类的，就把夜半庆典称作是过年，祭祀年称为拜年，烧竹筒称作爆竹也流传下来，此后一岁也称一年，每当过年的时候，就在除夕后半夜起来放爆竹，吃年夜饭，拜年。</p>`
+                        }
+                    ]
+                },
+                {
+                    id: "reading",
+                    title: "自由诗词",
+                    articles: [
+                        {
+                            id: "article4",
+                            title: "甘蔗之歌",
+                            date: "2024-03-25",
+                            content: `<p>十万雄兵矗前坡，
+
+头戴绿盔披紫革。
+
+闻风起舞叶当剑，
+
+顶日修仪身做戈。
+
+义无反顾对刀杵，
+
+前赴后继受操磨。
+
+但求人间甘少苦，
+
+粉身碎骨又如何？
+</p>`
+                        }
+                    ]
+                }
+            ]
+        };
+
+        let currentEditingId = null;
+        let isEditMode = false;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            renderMenu();
+            renderRecentArticles();
+            
+            // 检查 URL hash 加载特定文章
+            const hash = window.location.hash.slice(1);
+            if (hash) {
+                const article = findArticle(hash);
+                if (article) showArticle(article);
+            }
         });
 
-        // 加载文章函数
-        async function loadArticle(index, element) {
-            // 更新菜单高亮
-            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-            if(element) element.classList.add('active');
+        // 渲染菜单
+        function renderMenu() {
+            const container = document.getElementById('menuContainer');
+            container.innerHTML = '';
+            
+            blogData.categories.forEach((cat, catIndex) => {
+                const catDiv = document.createElement('div');
+                catDiv.className = 'mb-2';
+                
+                const headerBtn = document.createElement('button');
+                headerBtn.className = 'w-full text-left px-3 py-2 rounded-lg hover:bg-stone-100 flex items-center justify-between group menu-item';
+                headerBtn.innerHTML = `
+                    <span class="font-medium text-stone-800">${cat.title}</span>
+                    <svg class="w-4 h-4 text-stone-400 transform transition-transform duration-300 group-hover:text-stone-600" id="arrow-${cat.id}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                `;
+                headerBtn.onclick = () => toggleCategory(cat.id);
+                
+                const submenu = document.createElement('div');
+                submenu.id = `submenu-${cat.id}`;
+                submenu.className = 'submenu pl-4 space-y-1 mt-1';
+                
+                cat.articles.forEach(article => {
+                    const articleBtn = document.createElement('button');
+                    articleBtn.className = 'w-full text-left px-3 py-2 text-sm text-stone-600 hover:text-stone-900 hover:bg-stone-50 rounded-lg transition-colors truncate';
+                    articleBtn.textContent = article.title;
+                    articleBtn.onclick = () => showArticle(article);
+                    submenu.appendChild(articleBtn);
+                });
+                
+                // 编辑模式下显示添加文章按钮
+                if (isEditMode) {
+                    const addBtn = document.createElement('button');
+                    addBtn.className = 'w-full text-left px-3 py-2 text-xs text-stone-400 hover:text-stone-600 hover:bg-stone-50 rounded-lg transition-colors flex items-center gap-1';
+                    addBtn.innerHTML = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> 添加文章`;
+                    addBtn.onclick = () => newArticle(cat.id);
+                    submenu.appendChild(addBtn);
+                }
+                
+                catDiv.appendChild(headerBtn);
+                catDiv.appendChild(submenu);
+                container.appendChild(catDiv);
+            });
+        }
 
-            const article = articles[index];
-            titleEl.innerText = article.title;
-            bodyEl.innerHTML = '<p>加载中...</p>';
-
-            try {
-                const response = await fetch(article.file);
-                if (!response.ok) throw new Error('文件未找到');
-                const text = await response.text();
-                // 使用 marked 库将 markdown 转换为 html
-                bodyEl.innerHTML = marked.parse(text);
-            } catch (error) {
-                bodyEl.innerHTML = `<p style="color:red">无法加载文章：${article.file}<br>请确保该文件存在于同一目录下。</p>`;
+        // 切换分类展开/收起
+        function toggleCategory(catId) {
+            const submenu = document.getElementById(`submenu-${catId}`);
+            const arrow = document.getElementById(`arrow-${catId}`);
+            const isActive = submenu.classList.contains('active');
+            
+            // 关闭所有其他菜单
+            document.querySelectorAll('.submenu').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('[id^="arrow-"]').forEach(el => {
+                el.style.transform = 'rotate(0deg)';
+            });
+            
+            // 切换当前菜单
+            if (!isActive) {
+                submenu.classList.add('active');
+                arrow.style.transform = 'rotate(180deg)';
             }
+        }
+
+        // 显示文章
+        function showArticle(article) {
+            document.getElementById('homeView').classList.add('hidden');
+            document.getElementById('editorView').classList.add('hidden');
+            document.getElementById('articleView').classList.remove('hidden');
+            
+            document.getElementById('articleTitle').textContent = article.title;
+            document.getElementById('articleDate').textContent = article.date;
+            document.getElementById('articleContent').innerHTML = article.content;
+            
+            // 找到分类名称
+            const category = blogData.categories.find(c => c.articles.some(a => a.id === article.id));
+            document.getElementById('articleCategory').textContent = category ? category.title : '';
+            
+            // 更新 URL hash
+            window.location.hash = article.id;
+            currentEditingId = article.id;
+            
+            // 滚动到顶部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 显示首页
+        function showHome() {
+            document.getElementById('homeView').classList.remove('hidden');
+            document.getElementById('articleView').classList.add('hidden');
+            document.getElementById('editorView').classList.add('hidden');
+            window.location.hash = '';
+            currentEditingId = null;
+        }
+
+        // 渲染最近文章
+        function renderRecentArticles() {
+            const container = document.getElementById('recentArticles');
+            const allArticles = blogData.categories.flatMap(c => 
+                c.articles.map(a => ({...a, category: c.title}))
+            ).sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 4);
+            
+            container.innerHTML = allArticles.map(article => `
+                <div class="article-card bg-white p-6 rounded-xl border border-stone-200 cursor-pointer" onclick='showArticle(${JSON.stringify(article).replace(/'/g, "&apos;")})'>
+                    <div class="flex items-center gap-2 text-xs text-stone-500 mb-2">
+                        <span class="px-2 py-1 bg-stone-100 rounded">${article.category}</span>
+                        <span>${article.date}</span>
+                    </div>
+                    <h3 class="serif text-lg font-bold text-stone-800 mb-2 line-clamp-2">${article.title}</h3>
+                    <div class="text-sm text-stone-600 line-clamp-3">
+                        ${article.content.replace(/<[^>]*>/g, '').substring(0, 100)}...
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 查找文章
+        function findArticle(id) {
+            for (const cat of blogData.categories) {
+                const article = cat.articles.find(a => a.id === id);
+                if (article) return article;
+            }
+            return null;
+        }
+
+        // 切换编辑模式
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            const btn = document.getElementById('editBtn');
+            const controls = document.getElementById('editControls');
+            const editArticleBtn = document.getElementById('editArticleBtn');
+            
+            if (isEditMode) {
+                btn.classList.add('bg-stone-900', 'text-white', 'border-stone-900');
+                btn.classList.remove('border-stone-300');
+                controls.classList.remove('hidden');
+                editArticleBtn.classList.remove('hidden');
+            } else {
+                btn.classList.remove('bg-stone-900', 'text-white', 'border-stone-900');
+                btn.classList.add('border-stone-300');
+                controls.classList.add('hidden');
+                editArticleBtn.classList.add('hidden');
+            }
+            
+            renderMenu();
+        }
+
+        // 编辑当前文章
+        function editCurrentArticle() {
+            if (!currentEditingId) return;
+            const article = findArticle(currentEditingId);
+            if (!article) return;
+            
+            document.getElementById('articleView').classList.add('hidden');
+            document.getElementById('editorView').classList.remove('hidden');
+            document.getElementById('editorTitle').textContent = '编辑文章';
+            
+            document.getElementById('editTitle').value = article.title;
+            document.getElementById('editContent').value = article.content;
+            
+            // 填充分类选择
+            const catSelect = document.getElementById('editCategory');
+            catSelect.innerHTML = blogData.categories.map(c => 
+                `<option value="${c.id}" ${c.articles.some(a => a.id === currentEditingId) ? 'selected' : ''}>${c.title}</option>`
+            ).join('');
+        }
+
+        // 新建文章
+        function newArticle(catId) {
+            currentEditingId = null;
+            document.getElementById('homeView').classList.add('hidden');
+            document.getElementById('articleView').classList.add('hidden');
+            document.getElementById('editorView').classList.remove('hidden');
+            document.getElementById('editorTitle').textContent = '新建文章';
+            
+            document.getElementById('editTitle').value = '';
+            document.getElementById('editContent').value = '<p>在此输入文章内容...</p>';
+            
+            const catSelect = document.getElementById('editCategory');
+            catSelect.innerHTML = blogData.categories.map(c => 
+                `<option value="${c.id}" ${c.id === catId ? 'selected' : ''}>${c.title}</option>`
+            ).join('');
+        }
+
+        // 保存文章
+        function saveArticle() {
+            const title = document.getElementById('editTitle').value;
+            const content = document.getElementById('editContent').value;
+            const catId = document.getElementById('editCategory').value;
+            
+            if (!title || !content) {
+                alert('请填写标题和内容');
+                return;
+            }
+            
+            if (currentEditingId) {
+                // 更新现有文章
+                let article = null;
+                let oldCat = null;
+                
+                for (const cat of blogData.categories) {
+                    const idx = cat.articles.findIndex(a => a.id === currentEditingId);
+                    if (idx !== -1) {
+                        article = cat.articles[idx];
+                        oldCat = cat;
+                        break;
+                    }
+                }
+                
+                if (article) {
+                    article.title = title;
+                    article.content = content;
+                    article.date = new Date().toISOString().split('T')[0];
+                    
+                    // 如果分类变了，移动文章
+                    if (oldCat.id !== catId) {
+                        oldCat.articles = oldCat.articles.filter(a => a.id !== currentEditingId);
+                        const newCat = blogData.categories.find(c => c.id === catId);
+                        newCat.articles.push(article);
+                    }
+                }
+            } else {
+                // 创建新文章
+                const newArticle = {
+                    id: 'article_' + Date.now(),
+                    title: title,
+                    date: new Date().toISOString().split('T')[0],
+                    content: content
+                };
+                const cat = blogData.categories.find(c => c.id === catId);
+                cat.articles.push(newArticle);
+                currentEditingId = newArticle.id;
+            }
+            
+            renderMenu();
+            renderRecentArticles();
+            showArticle(findArticle(currentEditingId));
+        }
+
+        // 取消编辑
+        function cancelEdit() {
+            if (currentEditingId) {
+                showArticle(findArticle(currentEditingId));
+            } else {
+                showHome();
+            }
+        }
+
+        // 添加分类
+        function addCategory() {
+            const name = prompt('请输入分类名称：');
+            if (name) {
+                const id = 'cat_' + Date.now();
+                blogData.categories.push({
+                    id: id,
+                    title: name,
+                    articles: []
+                });
+                renderMenu();
+            }
+        }
+
+        // 导出数据
+        function exportData() {
+            const dataStr = JSON.stringify(blogData, null, 4);
+            const dataBlob = new Blob([`let blogData = ${dataStr};`], {type: 'application/javascript'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'blog-data.js';
+            link.click();
+            
+            alert('数据已导出！请复制代码中的 blogData 变量内容替换原数据。');
         }
     </script>
 </body>
